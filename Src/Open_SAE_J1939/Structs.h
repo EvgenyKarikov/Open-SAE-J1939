@@ -19,11 +19,20 @@
 /* This text name follows 8.3 filename standard - Important if you want to save to SD card */
 #define INFORMATION_THIS_ECU "ECUINFO.TXT"
 
-/* This is the maximum size for transferring data and these can be changed on your own interest */
-#define MAX_TP_DT 1785U
-#define MAX_IDENTIFICATION 30U
-#define MAX_DM_FIELD 10U
+//* This is the maximum size for transferring data and these can be changed on your own interest */
+#ifndef MAX_VEHICLE_IDENTIFICATION
 #define MAX_VEHICLE_IDENTIFICATION 17U
+#endif
+
+#ifndef MAX_TP_DT
+#define MAX_TP_DT 1785U
+#endif
+#ifndef MAX_IDENTIFICATION
+#define MAX_IDENTIFICATION 30U
+#endif
+#ifndef MAX_DM_FIELD
+#define MAX_DM_FIELD 10U
+#endif
 #ifndef MAX_PROPRIETARY_A
 #define MAX_PROPRIETARY_A 15U
 #endif

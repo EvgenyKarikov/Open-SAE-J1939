@@ -17,6 +17,7 @@ static void (*Callback_Function_Delay_ms)(uint8_t) = NULL;
 /* Platform independent library headers for CAN */
 #if OPENSAE_J1939_TARGET_PLATFORM == STM32
 #include "main.h"
+#include "cmsis_os2.h"
 #elif OPENSAE_J1939_TARGET_PLATFORM == ARDUINO
 #elif OPENSAE_J1939_TARGET_PLATFORM == PIC
 #elif OPENSAE_J1939_TARGET_PLATFORM == AVR
@@ -198,7 +199,7 @@ void CAN_Set_Callback_Functions(void (*Callback_Function_Send_)(uint32_t, uint8_
 
 void CAN_Delay(uint8_t milliseconds) {
 #if OPENSAE_J1939_TARGET_PLATFORM == STM32
-
+	osDelay(milliseconds);
 #elif OPENSAE_J1939_TARGET_PLATFORM == ARDUINO
 
 #elif OPENSAE_J1939_TARGET_PLATFORM == PIC
