@@ -18,7 +18,7 @@ bool Open_SAE_J1939_Startup_ECU(J1939* j1939) {
 	if(!Load_Struct(ECU_information_data, ECU_information_length, (char*)INFORMATION_THIS_ECU)){
 		return false; /* Problems occurs */
 	}
-	memcpy(&j1939->information_this_ECU, (Information_this_ECU*)ECU_information_data, ECU_information_length);
+	//memcpy(&j1939->information_this_ECU, (Information_this_ECU*)ECU_information_data, ECU_information_length);
 
 	/* If we are going to send and receive the ECU identification and component identification, we need to specify the size of them */
 	j1939->information_this_ECU.this_vehicle_identification.length_of_vin = MAX_VEHICLE_IDENTIFICATION;
