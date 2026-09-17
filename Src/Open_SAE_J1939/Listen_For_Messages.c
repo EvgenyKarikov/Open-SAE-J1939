@@ -37,6 +37,27 @@ ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939* j1939) {
     			PGN = (ID >> 8) & 0x3FF00UL; /* Mask for including EDP, DP, and PF only (exclude PS) */
 		}
 
+		/* Track active external ECUs on the bus */
+		if (SA < 0xFE && SA != j1939->information_this_ECU.this_ECU_address) {
+			bool exist = false;
+			for (uint8_t i = 0; i < j1939->number_of_other_ECU; i++) {
+				if (j1939->other_ECU_address[i] == SA) {
+					exist = true;
+					break;
+				}
+			}
+			if (!exist && j1939->number_of_other_ECU < 255) {
+				j1939->other_ECU_address[j1939->number_of_other_ECU++] = SA;
+			}
+		}
+
+		/* Detect address collision with a non-claiming or static device transmitting on our address */
+		if (j1939->information_this_ECU.this_ECU_address < 0xFE && 
+		    SA == j1939->information_this_ECU.this_ECU_address && 
+		    id1 != 0xEE) {
+			SAE_J1939_Relinquish_Address(j1939, SA);
+		}
+
 		rx_msg = RX_MSG_NOT_SUPPORTED;
 
 		/* Read request from other ECU */
@@ -74,10 +95,10 @@ ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939* j1939) {
 				  ((PGN >= PGN_PROPRIETARY_B2_START) && (PGN <= PGN_PROPRIETARY_B2_END))) {
 			SAE_J1939_Read_Response_Request_Proprietary_B(j1939, SA, PGN, data);								/* Manufacturer specific data (B) */
 			rx_msg = RX_MSG_RESP_REQ_PROPRIETARY_B;
-		}else if (id0 == 0x18 && id1 == 0xEE && DA == 0xFF && SA != 0xFE){
+		}else if ((id0 & 0x03) == 0x00 && id1 == 0xEE && DA == 0xFF && SA != 0xFE){
 			SAE_J1939_Read_Response_Request_Address_Claimed(j1939, SA, data);									/* This is a broadcast response request */
 			rx_msg = RX_MSG_RESP_REQ_ADDR_CLAIMED;
-		}else if (id0 == 0x18 && id1 == 0xEE && DA == 0xFF && SA == 0xFE) {
+		}else if ((id0 & 0x03) == 0x00 && id1 == 0xEE && DA == 0xFF && SA == 0xFE) {
 			SAE_J1939_Read_Address_Not_Claimed(j1939, SA, data);												/* This is error */
 			rx_msg = RX_MSG_ADDR_NOT_CLAIMED;
 
@@ -113,11 +134,10 @@ ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939* j1939) {
 		}else if (id0 == 0x0C && id1 == 0xC4 && DA == j1939->information_this_ECU.this_ECU_address){
 			ISO_11783_Read_General_Purpose_Valve_Command(j1939, SA, data);										/* General Purpose Valve Command have only one valve */
 			rx_msg = RX_MSG_GP_VALVE_CMD;
-		}else if (id0 == 0x0 && id1 == 0x2 && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
+		}else if (id0 == 0x0 && id1 == 0x2 && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)){
 			SAE_J1939_Read_Address_Delete(j1939, data);															/* Not a SAE J1939 standard */
 			rx_msg = RX_MSG_NOT_SAE_J1939;
-
-		} else {
+		}else{
 			rx_msg = RX_MSG_UNKNOWN;																			/* The message was not meant for this ECU */
 		}
 		/* Add more else if statement here */
